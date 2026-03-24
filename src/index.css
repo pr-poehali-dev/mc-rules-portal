@@ -4,65 +4,17 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222.2 47% 8%;
     --card-foreground: 210 40% 98%;
 
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 222.2 84% 4.9%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -70,32 +22,264 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 36 100% 50%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 55%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
+    --border: 142 30% 25%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 142 71% 45%;
+
+    --radius: 0rem;
+
+    --mc-green: #4caf50;
+    --mc-dark-green: #2d7a31;
+    --mc-dirt: #8b6340;
+    --mc-stone: #7f7f7f;
+    --mc-gold: #ffd700;
+    --mc-red: #ff4444;
+    --mc-bg: #0e1a0e;
+    --mc-panel: #1a2d1a;
+    --mc-border: #2d5a2d;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    image-rendering: pixelated;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-family: "Rubik", sans-serif;
+    background-color: var(--mc-bg);
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 31px,
+        rgba(0, 80, 0, 0.04) 31px,
+        rgba(0, 80, 0, 0.04) 32px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 31px,
+        rgba(0, 80, 0, 0.04) 31px,
+        rgba(0, 80, 0, 0.04) 32px
+      );
   }
+}
+
+.font-pixel {
+  font-family: "Press Start 2P", monospace;
+}
+
+.mc-block {
+  border: 3px solid;
+  border-top-color: rgba(255, 255, 255, 0.3);
+  border-left-color: rgba(255, 255, 255, 0.2);
+  border-right-color: rgba(0, 0, 0, 0.4);
+  border-bottom-color: rgba(0, 0, 0, 0.5);
+  image-rendering: pixelated;
+}
+
+.mc-btn {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  padding: 10px 20px;
+  background: #4caf50;
+  color: #0e1a0e;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+  box-shadow:
+    inset -3px -3px 0 #2d7a31,
+    inset 3px 3px 0 #7ed87f;
+  transition: all 0.05s;
+}
+
+.mc-btn:hover {
+  background: #5cbf60;
+  transform: translateY(-1px);
+}
+
+.mc-btn:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 3px 3px 0 #2d7a31,
+    inset -3px -3px 0 #7ed87f;
+}
+
+.mc-panel {
+  background: rgba(14, 26, 14, 0.9);
+  border: 2px solid var(--mc-border);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 4px 24px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.mc-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 3px,
+    rgba(76, 175, 80, 0.02) 3px,
+    rgba(76, 175, 80, 0.02) 4px
+  );
+  pointer-events: none;
+}
+
+.rule-number {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: var(--mc-gold);
+  min-width: 40px;
+}
+
+.punishment-badge {
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  padding: 4px 8px;
+  display: inline-block;
+}
+
+.punishment-mute {
+  background: #b8860b;
+  color: #fff8dc;
+  box-shadow:
+    inset -2px -2px 0 #8b6508,
+    inset 2px 2px 0 #ffd700;
+}
+
+.punishment-ban {
+  background: #8b1a1a;
+  color: #ffe0e0;
+  box-shadow:
+    inset -2px -2px 0 #5c0e0e,
+    inset 2px 2px 0 #ff6666;
+}
+
+.punishment-warn {
+  background: #1a4a8b;
+  color: #e0eaff;
+  box-shadow:
+    inset -2px -2px 0 #0e2e5c,
+    inset 2px 2px 0 #6699ff;
+}
+
+.pixel-divider {
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--mc-green) 0px,
+    var(--mc-green) 8px,
+    #2d7a31 8px,
+    #2d7a31 16px,
+    #1a4a1a 16px,
+    #1a4a1a 24px,
+    #2d7a31 24px,
+    #2d7a31 32px
+  );
+}
+
+.floating-block {
+  animation: float 3s ease-in-out infinite;
+}
+
+.floating-block:nth-child(2) {
+  animation-delay: 0.5s;
+}
+.floating-block:nth-child(3) {
+  animation-delay: 1s;
+}
+.floating-block:nth-child(4) {
+  animation-delay: 1.5s;
+}
+.floating-block:nth-child(5) {
+  animation-delay: 2s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100vh);
+  }
+}
+
+.hero-title-glow {
+  text-shadow:
+    0 0 20px rgba(76, 175, 80, 0.8),
+    0 0 40px rgba(76, 175, 80, 0.4),
+    0 0 80px rgba(76, 175, 80, 0.2),
+    4px 4px 0 #1a4a1a;
+}
+
+.nav-link {
+  font-family: "Press Start 2P", monospace;
+  font-size: 9px;
+  color: #a0d4a0;
+  padding: 8px 16px;
+  transition: color 0.2s;
+  position: relative;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  color: var(--mc-green);
+}
+
+.nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--mc-green);
+}
+
+.sub-rule {
+  border-left: 3px solid rgba(76, 175, 80, 0.3);
+  padding-left: 16px;
+  margin-left: 8px;
+}
+
+.sub-rule:hover {
+  border-left-color: rgba(76, 175, 80, 0.7);
+  background: rgba(76, 175, 80, 0.03);
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.blink {
+  animation: blink 1s step-end infinite;
 }
