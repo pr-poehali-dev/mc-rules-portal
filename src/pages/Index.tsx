@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Icon from "@/components/ui/icon";
 
 const RULES_DATA = [
@@ -277,9 +277,25 @@ const MCBlock = ({ color, char, size = 32 }: { color: string; char?: string; siz
   </div>
 );
 
+type Subrule = { num: string; text: string };
+type Rule = { num: string; text: string; punishment: string | null; subrules: Subrule[] };
+type Section = { id: string; title: string; icon: string; color: string; rules: Rule[] };
+
+const ADMIN_CODE = "01022015";
+
 export default function Index() {
-  const [activePage, setActivePage] = useState<"home" | "rules" | "punishments">("home");
+  const [activePage, setActivePage] = useState<"home" | "rules" | "punishments" | "admin">("home");
   const [expandedRules, setExpandedRules] = useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [rulesData, setRulesData] = useState<Section[]>(RULES_DATA);
+
+  // Admin
+  const [adminCode, setAdminCode] = useState("");
+  const [adminAuth, setAdminAuth] = useState(false);
+  const [adminError, setAdminError] = useState(false);
+  const [editingRule, setEditingRule] = useState<{ sectionIdx: number; ruleIdx: number; subIdx?: number } | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editPunishment, setEditPunishment] = useState("");
 
   const toggleRule = (id: string) => {
     setExpandedRules(prev => ({ ...prev, [id]: !prev[id] }));
@@ -292,30 +308,125 @@ export default function Index() {
     return "punishment-warn";
   };
 
+  const handleAdminLogin = () => {
+    if (adminCode === ADMIN_CODE) {
+      setAdminAuth(true);
+      setAdminError(false);
+    } else {
+      setAdminError(true);
+      setAdminCode("");
+    }
+  };
+
+  const startEdit = (sectionIdx: number, ruleIdx: number, subIdx?: number) => {
+    const section = rulesData[sectionIdx];
+    if (subIdx !== undefined) {
+      setEditText(section.rules[ruleIdx].subrules[subIdx].text);
+      setEditPunishment("");
+    } else {
+      setEditText(section.rules[ruleIdx].text);
+      setEditPunishment(section.rules[ruleIdx].punishment || "");
+    }
+    setEditingRule({ sectionIdx, ruleIdx, subIdx });
+  };
+
+  const saveEdit = () => {
+    if (!editingRule) return;
+    const { sectionIdx, ruleIdx, subIdx } = editingRule;
+    const updated = rulesData.map((s, si) => {
+      if (si !== sectionIdx) return s;
+      return {
+        ...s,
+        rules: s.rules.map((r, ri) => {
+          if (ri !== ruleIdx) return r;
+          if (subIdx !== undefined) {
+            return {
+              ...r,
+              subrules: r.subrules.map((sub, subi) =>
+                subi === subIdx ? { ...sub, text: editText } : sub
+              )
+            };
+          }
+          return { ...r, text: editText, punishment: editPunishment || null };
+        })
+      };
+    });
+    setRulesData(updated);
+    setEditingRule(null);
+  };
+
+  // Search
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase();
+    const results: { sectionTitle: string; num: string; text: string }[] = [];
+    rulesData.forEach(section => {
+      section.rules.forEach(rule => {
+        if (rule.text.toLowerCase().includes(q) || rule.num.includes(q)) {
+          results.push({ sectionTitle: section.title, num: rule.num, text: rule.text });
+        }
+        rule.subrules.forEach(sub => {
+          if (sub.text.toLowerCase().includes(q) || sub.num.includes(q)) {
+            results.push({ sectionTitle: section.title, num: sub.num, text: sub.text });
+          }
+        });
+      });
+    });
+    return results;
+  }, [searchQuery, rulesData]);
+
   return (
     <div className="min-h-screen" style={{ background: "var(--mc-bg)" }}>
       {/* Navbar */}
       <nav className="sticky top-0 z-50 mc-panel" style={{ borderBottom: "2px solid var(--mc-border)" }}>
-        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
+        <div className="max-w-5xl mx-auto px-4 flex items-center justify-between h-14 gap-3">
           <button
             onClick={() => setActivePage("home")}
-            className="font-pixel text-xs md:text-sm tracking-wider"
+            className="font-pixel text-xs tracking-wider flex-shrink-0"
             style={{ color: "var(--mc-green)", textShadow: "0 0 10px rgba(76,175,80,0.5)" }}
           >
             MULTI<span style={{ color: "#FFD700" }}>WORLD</span>
           </button>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setActivePage("home")} className={`nav-link ${activePage === "home" ? "active" : ""}`}>
-              Главная
-            </button>
-            <button onClick={() => setActivePage("rules")} className={`nav-link ${activePage === "rules" ? "active" : ""}`}>
-              Правила
-            </button>
-            <button onClick={() => setActivePage("punishments")} className={`nav-link ${activePage === "punishments" ? "active" : ""}`}>
-              Наказания
+          {/* Search */}
+          <div className="flex-1 max-w-xs relative">
+            <Icon name="Search" size={12} className="absolute left-2 top-1/2 -translate-y-1/2" style={{ color: "#4CAF50" } as React.CSSProperties} />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Поиск по правилам..."
+              className="w-full pl-7 pr-3 py-1.5 font-pixel text-[8px] outline-none"
+              style={{ background: "rgba(76,175,80,0.08)", border: "1px solid var(--mc-border)", color: "#a0d4a0" }}
+            />
+          </div>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <button onClick={() => setActivePage("home")} className={`nav-link ${activePage === "home" ? "active" : ""}`}>Главная</button>
+            <button onClick={() => setActivePage("rules")} className={`nav-link ${activePage === "rules" ? "active" : ""}`}>Правила</button>
+            <button onClick={() => setActivePage("punishments")} className={`nav-link ${activePage === "punishments" ? "active" : ""}`}>Наказания</button>
+            <button onClick={() => setActivePage("admin")} className={`nav-link ${activePage === "admin" ? "active" : ""}`} style={{ color: "#FF4444" }}>
+              <Icon name="Shield" size={12} />
             </button>
           </div>
         </div>
+        {/* Search results dropdown */}
+        {searchQuery.trim() && (
+          <div className="absolute left-0 right-0 z-50 mx-auto max-w-xl" style={{ top: "56px" }}>
+            <div className="mc-panel mx-4 max-h-72 overflow-y-auto">
+              {searchResults.length === 0 ? (
+                <div className="px-4 py-3 font-pixel text-[8px]" style={{ color: "#666" }}>Ничего не найдено</div>
+              ) : searchResults.map((r, i) => (
+                <button
+                  key={i}
+                  className="w-full text-left px-4 py-2 hover:bg-white/5 border-b"
+                  style={{ borderColor: "rgba(76,175,80,0.1)" }}
+                  onClick={() => { setActivePage("rules"); setSearchQuery(""); setExpandedRules(prev => ({ ...prev, [r.num.split(".").slice(0, 2).join(".")]: true })); }}
+                >
+                  <span className="font-pixel text-[7px] mr-2" style={{ color: "#FFD700" }}>{r.num}</span>
+                  <span style={{ color: "#a0d4a0", fontSize: "11px" }}>{r.text.slice(0, 80)}{r.text.length > 80 ? "…" : ""}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* HOME PAGE */}
@@ -419,7 +530,7 @@ export default function Index() {
           </div>
 
           <div className="space-y-6">
-            {RULES_DATA.map(section => (
+            {rulesData.map(section => (
               <div key={section.id} className="mc-panel p-6">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="mc-block flex items-center justify-center" style={{ width: 40, height: 40, background: section.color, flexShrink: 0 }}>
@@ -553,6 +664,111 @@ export default function Index() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ADMIN PAGE */}
+      {activePage === "admin" && (
+        <div className="max-w-4xl mx-auto px-4 py-12">
+          {!adminAuth ? (
+            <div className="max-w-sm mx-auto text-center">
+              <div className="flex justify-center gap-2 mb-6">
+                <MCBlock color="#8b1a1a" size={32} char="🔒" />
+              </div>
+              <h2 className="font-pixel mb-6" style={{ color: "#FF4444", fontSize: "14px" }}>ADMIN PANEL</h2>
+              <div className="mc-panel p-6 space-y-4">
+                <p className="font-pixel" style={{ color: "#666", fontSize: "8px" }}>ВВЕДИТЕ КОД ДОСТУПА</p>
+                <input
+                  type="password"
+                  value={adminCode}
+                  onChange={e => setAdminCode(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleAdminLogin()}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 text-center font-pixel text-sm outline-none"
+                  style={{ background: "rgba(255,68,68,0.05)", border: `2px solid ${adminError ? "#FF4444" : "var(--mc-border)"}`, color: "#fff", letterSpacing: "0.3em" }}
+                />
+                {adminError && <p className="font-pixel" style={{ color: "#FF4444", fontSize: "7px" }}>НЕВЕРНЫЙ КОД</p>}
+                <button className="mc-btn w-full" style={{ background: "#FF4444", color: "#fff", boxShadow: "inset -3px -3px 0 #8b1a1a, inset 3px 3px 0 #ff9999" }} onClick={handleAdminLogin}>
+                  ВОЙТИ
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="font-pixel" style={{ color: "#FF4444", fontSize: "14px" }}>⚙ РЕДАКТОР ПРАВИЛ</h2>
+                <button className="font-pixel text-[8px] px-3 py-2" style={{ color: "#666", border: "1px solid #333" }} onClick={() => { setAdminAuth(false); setAdminCode(""); }}>ВЫЙТИ</button>
+              </div>
+
+              {editingRule && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.8)" }}>
+                  <div className="mc-panel p-6 w-full max-w-lg mx-4">
+                    <h3 className="font-pixel mb-4" style={{ color: "#FFD700", fontSize: "10px" }}>РЕДАКТИРОВАТЬ ПРАВИЛО</h3>
+                    <textarea
+                      value={editText}
+                      onChange={e => setEditText(e.target.value)}
+                      rows={5}
+                      className="w-full px-3 py-2 mb-3 outline-none resize-none"
+                      style={{ background: "rgba(76,175,80,0.05)", border: "1px solid var(--mc-border)", color: "#d4e8d4", fontSize: "13px", lineHeight: 1.6 }}
+                    />
+                    {editingRule.subIdx === undefined && (
+                      <>
+                        <p className="font-pixel mb-1" style={{ color: "#666", fontSize: "7px" }}>НАКАЗАНИЕ</p>
+                        <input
+                          value={editPunishment}
+                          onChange={e => setEditPunishment(e.target.value)}
+                          className="w-full px-3 py-2 mb-3 outline-none"
+                          style={{ background: "rgba(76,175,80,0.05)", border: "1px solid var(--mc-border)", color: "#d4e8d4", fontSize: "12px" }}
+                        />
+                      </>
+                    )}
+                    <div className="flex gap-3">
+                      <button className="mc-btn flex-1" onClick={saveEdit}>💾 СОХРАНИТЬ</button>
+                      <button className="mc-btn" style={{ background: "#555", boxShadow: "inset -3px -3px 0 #333, inset 3px 3px 0 #999" }} onClick={() => setEditingRule(null)}>ОТМЕНА</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                {rulesData.map((section, si) => (
+                  <div key={section.id} className="mc-panel p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="mc-block flex items-center justify-center" style={{ width: 32, height: 32, background: section.color, flexShrink: 0 }}>
+                        <Icon name={section.icon} fallback="Shield" size={14} className="text-white" />
+                      </div>
+                      <h3 className="font-pixel" style={{ color: section.color, fontSize: "11px" }}>Раздел {section.id}: {section.title}</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {section.rules.map((rule, ri) => (
+                        <div key={rule.num} className="p-3" style={{ background: "rgba(76,175,80,0.03)", border: "1px solid rgba(76,175,80,0.08)" }}>
+                          <div className="flex items-start gap-2">
+                            <span className="rule-number flex-shrink-0">{rule.num}</span>
+                            <p className="flex-1" style={{ color: "#d4e8d4", fontSize: "13px", lineHeight: 1.5 }}>{rule.text}</p>
+                            <button onClick={() => startEdit(si, ri)} className="flex-shrink-0 px-2 py-1 font-pixel text-[7px]" style={{ background: "rgba(255,215,0,0.1)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.3)" }}>
+                              ✏ ред.
+                            </button>
+                          </div>
+                          {rule.punishment && (
+                            <span className={`punishment-badge mt-2 ml-10 ${getPunishmentBadge(rule.punishment)}`}>⚔ {rule.punishment.toUpperCase()}</span>
+                          )}
+                          {rule.subrules.map((sub, subi) => (
+                            <div key={sub.num} className="flex items-start gap-2 mt-2 ml-6 pl-3" style={{ borderLeft: "2px solid rgba(76,175,80,0.2)" }}>
+                              <span className="rule-number flex-shrink-0" style={{ fontSize: "7px", color: "#a0d4a0" }}>{sub.num}</span>
+                              <p className="flex-1" style={{ color: "#a0c0a0", fontSize: "12px", lineHeight: 1.5 }}>{sub.text}</p>
+                              <button onClick={() => startEdit(si, ri, subi)} className="flex-shrink-0 px-2 py-1 font-pixel text-[7px]" style={{ background: "rgba(255,215,0,0.1)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.3)" }}>
+                                ✏ ред.
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
